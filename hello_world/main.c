@@ -6,12 +6,20 @@
  * pc13 -> 3.3v				GPIOC_ODR			0x4001100C			bit13 -> 1
  * pc13 -> 0v				GPIOC_ODR			0x4001100C			BIT13-> 0
  *
+ *
+ *
+ *note:
+ Use =  when you’re initializing a register (you know it’s reset to 0).
+ Use |=  when you’re changing or adding bits later (to not erase others).
  */
+
+
 
 #include <stdint.h>
 
 //clocks
 #define RCC_APB2ENR *((volatile uint32_t *)0x40021018)
+// use 1U (unsigned(can only be pos or 0)) to match register type and avoid signed shift issues
 #define RCC_IOPAEN (1U<<2) //enable GPIOA clock
 #define RCC_USART1EN (1U<<14) //enable USART1 clock
 
@@ -34,8 +42,8 @@ static void usart1_init(uint32_t baud){
 
 	RCC_APB2ENR |= RCC_IOPAEN | RCC_USART1EN; // turn on GPIOA and USART1 clocks
 
-	GPIOA_CRH &= ~(0xFU <<4); //clear for PA9
-	GPIOA_CRH |= (0xBU <<4); //MODE =11, CNF = 10
+	GPIOA_CRH &= ~(0xFU <<4); //clear for PA9, F in binary is 1111. write 4 bits then invert to clear registers
+	GPIOA_CRH |= (0xBU <<4); //MODE =11, CNF = 10, B in binary is 1011
 
 	USART1_BRR = 8000000 / 9600; //set baud rate
 
@@ -50,7 +58,8 @@ static void usart1_write(char ch){
 
 static void usart1_write_str(const char *s){
 
-	while(*s) usart1_write(*s++); //send chars until string ends
+	while(*s)
+		usart1_write(*s++); //send chars until string ends
 }
 
 
